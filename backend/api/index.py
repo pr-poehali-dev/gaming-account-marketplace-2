@@ -109,10 +109,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         elif method == 'POST' and action == 'create-offer':
             body_data = json.loads(event.get('body', '{}'))
+            headers = event.get('headers', {})
+            seller_id = int(headers.get('x-user-id', headers.get('X-User-Id', 0)))
+            
+            if not seller_id:
+                return {
+                    'statusCode': 401,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Необходима авторизация'})
+                }
             
             game_id = body_data.get('game_id')
             category_id = body_data.get('category_id')
-            seller_id = body_data.get('seller_id', 1)
             title = body_data.get('title')
             description = body_data.get('description', '')
             price = body_data.get('price')
@@ -121,7 +129,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return {
                     'statusCode': 400,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': 'Missing required fields'})
+                    'body': json.dumps({'error': 'Заполните все поля'})
                 }
             
             cursor.execute('''
@@ -137,7 +145,48 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return {
                 'statusCode': 201,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'id': offer_id, 'message': 'Offer created'})
+                'body': json.dumps({'id': offer_id, 'message': 'Объявление создано'})
+            }
+        
+        elif method == 'GET' and action == 'my-offers':
+            headers = event.get('headers', {})
+            seller_id = int(headers.get('x-user-id', headers.get('X-User-Id', 0)))
+            
+            if not seller_id:
+                return {
+                    'statusCode': 401,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Необходима авторизация'})
+                }
+            
+            cursor.execute('''
+                SELECT o.id, g.name as game, gc.name as category,
+                       o.title, o.description, o.price, o.status, o.created_at
+                FROM t_p18833766_gaming_account_marke.offers o
+                JOIN t_p18833766_gaming_account_marke.games g ON o.game_id = g.id
+                JOIN t_p18833766_gaming_account_marke.game_categories gc ON o.category_id = gc.id
+                WHERE o.seller_id = %s
+                ORDER BY o.created_at DESC
+            ''', (seller_id,))
+            
+            rows = cursor.fetchall()
+            offers = []
+            for row in rows:
+                offers.append({
+                    'id': row[0],
+                    'game': row[1],
+                    'category': row[2],
+                    'title': row[3],
+                    'description': row[4],
+                    'price': row[5],
+                    'status': row[6],
+                    'created_at': row[7].isoformat() if row[7] else None
+                })
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'offers': offers})
             }
         
         else:
