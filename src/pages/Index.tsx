@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ interface Game {
   name: string;
   image: string;
   regions?: string[];
-  categories: string[];
+  categories: { id: number; name: string; }[];
 }
 
 interface Offer {
@@ -20,6 +20,7 @@ interface Offer {
   game: string;
   category: string;
   seller: string;
+  title: string;
   description: string;
   price: number;
   rating: number;
@@ -27,39 +28,43 @@ interface Offer {
   online: boolean;
 }
 
+const API_URL = 'https://functions.poehali.dev/170597f6-2ca7-4ea8-aa56-3bab0e5a86c1';
+
 export default function Index() {
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [showOfferDialog, setShowOfferDialog] = useState(false);
+  const [games, setGames] = useState<Game[]>([]);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const games: Game[] = [
-    { id: 1, name: 'Counter-Strike 2', image: '🎯', regions: ['EU', 'RU', 'NA'], categories: ['Скины', 'Аккаунты', 'Буст рейтинга', 'Прокачка'] },
-    { id: 2, name: 'Dota 2', image: '⚔️', regions: ['EU', 'RU'], categories: ['Предметы', 'Аккаунты', 'Буст MMR', 'Калибровка'] },
-    { id: 3, name: 'World of Warcraft', image: '🐉', regions: ['EU', 'US'], categories: ['Золото', 'Аккаунты', 'Буст', 'Валюта'] },
-    { id: 4, name: 'Roblox', image: '🎮', categories: ['Robux', 'Аккаунты', 'Предметы', 'Игровая валюта'] },
-    { id: 5, name: 'Genshin Impact', image: '✨', categories: ['Кристаллы', 'Аккаунты', 'Примогемы', 'Welkin Moon'] },
-    { id: 6, name: 'Valorant', image: '🔫', regions: ['EU', 'NA'], categories: ['VP Points', 'Аккаунты', 'Скины', 'Буст ранга'] },
-    { id: 7, name: 'Steam', image: '💨', categories: ['Аккаунты', 'Ключи', 'Пополнение', 'Игры'] },
-    { id: 8, name: 'Fortnite', image: '🏗️', categories: ['V-Bucks', 'Аккаунты', 'Скины', 'Battle Pass'] },
-    { id: 9, name: 'Minecraft', image: '⛏️', categories: ['Аккаунты', 'Сервера', 'Приватка', 'Модерка'] },
-    { id: 10, name: 'GTA V', image: '🚗', categories: ['Деньги', 'Аккаунты', 'Прокачка', 'Unlock All'] },
-    { id: 11, name: 'Apex Legends', image: '🎲', categories: ['Монеты', 'Аккаунты', 'Скины', 'Буст'] },
-    { id: 12, name: 'League of Legends', image: '🏆', regions: ['EUW', 'EUNE', 'RU'], categories: ['RP', 'Аккаунты', 'Буст', 'Скины'] },
-    { id: 13, name: 'Albion Online', image: '🗡️', categories: ['Серебро', 'Золото', 'Аккаунты'] },
-    { id: 14, name: 'Brawl Stars', image: '🥊', categories: ['Гемы', 'Аккаунты', 'Буст'] },
-    { id: 15, name: 'Call of Duty', image: '🎖️', categories: ['CP Points', 'Аккаунты', 'Буст'] },
-    { id: 16, name: 'Escape from Tarkov', image: '🔫', categories: ['Рубли', 'Предметы', 'Буст'] },
-  ];
+  useEffect(() => {
+    loadGames();
+    loadOffers();
+  }, []);
 
-  const offers: Offer[] = [
-    { id: 1, game: 'Counter-Strike 2', category: 'Скины', seller: 'ProTrader', description: 'AK-47 | Redline (Field-Tested)', price: 850, rating: 5.0, reviews: 1240, online: true },
-    { id: 2, game: 'Dota 2', category: 'Буст MMR', seller: 'MMRBoost', description: '+1000 MMR за 3-5 дней', price: 2500, rating: 4.9, reviews: 856, online: true },
-    { id: 3, game: 'World of Warcraft', category: 'Золото', seller: 'GoldKing', description: '100k золота WoW EU', price: 3200, rating: 4.8, reviews: 2103, online: false },
-    { id: 4, game: 'Roblox', category: 'Robux', seller: 'RobuxShop', description: '10,000 Robux мгновенно', price: 1200, rating: 4.9, reviews: 3421, online: true },
-    { id: 5, game: 'Valorant', category: 'Буст ранга', seller: 'ValoBoost', description: 'Буст от Iron до Diamond', price: 4500, rating: 5.0, reviews: 678, online: true },
-    { id: 6, game: 'Steam', category: 'Аккаунты', seller: 'SteamSeller', description: 'Аккаунт 250+ игр, Prime', price: 5500, rating: 4.7, reviews: 421, online: false },
-  ];
+  const loadGames = async () => {
+    try {
+      const response = await fetch(`${API_URL}?action=games`);
+      const data = await response.json();
+      setGames(data.games || []);
+    } catch (error) {
+      console.error('Error loading games:', error);
+    }
+  };
+
+  const loadOffers = async () => {
+    try {
+      const response = await fetch(`${API_URL}?action=offers`);
+      const data = await response.json();
+      setOffers(data.offers || []);
+    } catch (error) {
+      console.error('Error loading offers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   const numbers = ['0', '2', '7', '8'];
@@ -72,6 +77,17 @@ export default function Index() {
     setSelectedOffer(offer);
     setShowOfferDialog(true);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Icon name="Loader2" size={48} className="animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Загрузка данных...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -114,7 +130,7 @@ export default function Index() {
                 <div className="text-6xl">🎮</div>
                 <div>
                   <h2 className="text-4xl font-bold mb-2">Маркетплейс игровых ценностей</h2>
-                  <p className="text-lg text-muted-foreground">753+ игр • Безопасные сделки • Гарантия возврата</p>
+                  <p className="text-lg text-muted-foreground">{games.length}+ игр • Безопасные сделки • Гарантия возврата</p>
                 </div>
               </div>
               <div className="flex items-center gap-6 mt-6">
@@ -124,7 +140,7 @@ export default function Index() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Icon name="ShoppingBag" size={20} className="text-secondary" />
-                  <span className="text-sm">Сделок сегодня: 8,421</span>
+                  <span className="text-sm">Предложений: {offers.length}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Icon name="Star" size={20} className="text-yellow-500" />
@@ -176,7 +192,7 @@ export default function Index() {
                       <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{game.name}</h3>
                     </div>
                     
-                    {game.regions && (
+                    {game.regions && game.regions.length > 0 && (
                       <div className="flex gap-2 mb-3">
                         {game.regions.map(region => (
                           <Badge key={region} variant="outline" className="text-xs">
@@ -187,14 +203,14 @@ export default function Index() {
                     )}
 
                     <div className="flex flex-wrap gap-2">
-                      {game.categories.map((category, idx) => (
+                      {game.categories.map((category) => (
                         <Button
-                          key={idx}
+                          key={category.id}
                           variant="ghost"
                           size="sm"
                           className="h-7 text-xs hover:text-primary"
                         >
-                          {category}
+                          {category.name}
                         </Button>
                       ))}
                     </div>
@@ -213,7 +229,7 @@ export default function Index() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {offers.map(offer => (
+              {offers.slice(0, 6).map(offer => (
                 <Card key={offer.id} className="hover-scale cursor-pointer group" onClick={() => openOfferDialog(offer)}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
@@ -222,7 +238,7 @@ export default function Index() {
                           <Badge variant="secondary" className="text-xs">{offer.category}</Badge>
                           <span className="text-sm text-muted-foreground">{offer.game}</span>
                         </div>
-                        <h4 className="font-semibold mb-2 group-hover:text-primary transition-colors">{offer.description}</h4>
+                        <h4 className="font-semibold mb-2 group-hover:text-primary transition-colors">{offer.title}</h4>
                       </div>
                       {offer.online && (
                         <div className="w-2 h-2 rounded-full bg-green-500"></div>
@@ -237,7 +253,7 @@ export default function Index() {
                         <span className="text-sm font-medium">{offer.seller}</span>
                         <div className="flex items-center gap-1 ml-2">
                           <Icon name="Star" size={14} className="text-yellow-500" />
-                          <span className="text-sm">{offer.rating}</span>
+                          <span className="text-sm">{offer.rating.toFixed(1)}</span>
                           <span className="text-xs text-muted-foreground">({offer.reviews})</span>
                         </div>
                       </div>
@@ -294,7 +310,7 @@ export default function Index() {
                   <Badge variant="secondary">{selectedOffer.category}</Badge>
                   <span className="text-muted-foreground">{selectedOffer.game}</span>
                 </div>
-                <h3 className="text-xl font-bold mb-4">{selectedOffer.description}</h3>
+                <h3 className="text-xl font-bold mb-4">{selectedOffer.title}</h3>
 
                 <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
                   <Icon name="User" size={32} className="text-muted-foreground" />
@@ -303,7 +319,7 @@ export default function Index() {
                     <div className="flex items-center gap-2 text-sm">
                       <div className="flex items-center gap-1">
                         <Icon name="Star" size={14} className="text-yellow-500" />
-                        <span>{selectedOffer.rating}</span>
+                        <span>{selectedOffer.rating.toFixed(1)}</span>
                       </div>
                       <span className="text-muted-foreground">• {selectedOffer.reviews} отзывов</span>
                       {selectedOffer.online && (
