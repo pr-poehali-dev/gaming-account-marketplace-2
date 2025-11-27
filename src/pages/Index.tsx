@@ -1,243 +1,250 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
 
-interface Listing {
+interface Game {
   id: number;
-  title: string;
-  category: string;
-  game: string;
-  price: number;
-  seller: string;
-  rating: number;
+  name: string;
   image: string;
+  regions?: string[];
+  categories: string[];
 }
 
-interface Deal {
+interface Offer {
   id: number;
-  title: string;
-  amount: number;
-  status: 'pending' | 'paid' | 'completed';
-  buyer?: string;
-  seller?: string;
+  game: string;
+  category: string;
+  seller: string;
+  description: string;
+  price: number;
+  rating: number;
+  reviews: number;
+  online: boolean;
 }
 
 export default function Index() {
-  const [activeTab, setActiveTab] = useState('home');
-  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-  const [showDealDialog, setShowDealDialog] = useState(false);
-  const [showAddListingDialog, setShowAddListingDialog] = useState(false);
-  const [balance] = useState(15420);
+  const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [showOfferDialog, setShowOfferDialog] = useState(false);
 
-  const listings: Listing[] = [
-    { id: 1, title: 'Аккаунт Steam 200+ игр', category: 'Аккаунты', game: 'Steam', price: 5000, seller: 'GameMaster', rating: 4.9, image: '🎮' },
-    { id: 2, title: 'CS2 - Нож Karambit', category: 'Предметы', game: 'CS2', price: 12000, seller: 'ProTrader', rating: 5.0, image: '🔪' },
-    { id: 3, title: 'Ключ Cyberpunk 2077', category: 'Ключи', game: 'Cyberpunk', price: 1500, seller: 'KeySeller', rating: 4.8, image: '🔑' },
-    { id: 4, title: 'Аккаунт Dota 2 Ancient', category: 'Аккаунты', game: 'Dota 2', price: 3000, seller: 'DotaPro', rating: 4.7, image: '⚔️' },
-    { id: 5, title: 'GTA V Online 1 млрд $', category: 'Услуги', game: 'GTA V', price: 2500, seller: 'MoneyBoost', rating: 4.9, image: '💰' },
-    { id: 6, title: 'Valorant - Phantom Skin', category: 'Предметы', game: 'Valorant', price: 800, seller: 'SkinShop', rating: 4.6, image: '🎯' },
+  const games: Game[] = [
+    { id: 1, name: 'Counter-Strike 2', image: '🎯', regions: ['EU', 'RU', 'NA'], categories: ['Скины', 'Аккаунты', 'Буст рейтинга', 'Прокачка'] },
+    { id: 2, name: 'Dota 2', image: '⚔️', regions: ['EU', 'RU'], categories: ['Предметы', 'Аккаунты', 'Буст MMR', 'Калибровка'] },
+    { id: 3, name: 'World of Warcraft', image: '🐉', regions: ['EU', 'US'], categories: ['Золото', 'Аккаунты', 'Буст', 'Валюта'] },
+    { id: 4, name: 'Roblox', image: '🎮', categories: ['Robux', 'Аккаунты', 'Предметы', 'Игровая валюта'] },
+    { id: 5, name: 'Genshin Impact', image: '✨', categories: ['Кристаллы', 'Аккаунты', 'Примогемы', 'Welkin Moon'] },
+    { id: 6, name: 'Valorant', image: '🔫', regions: ['EU', 'NA'], categories: ['VP Points', 'Аккаунты', 'Скины', 'Буст ранга'] },
+    { id: 7, name: 'Steam', image: '💨', categories: ['Аккаунты', 'Ключи', 'Пополнение', 'Игры'] },
+    { id: 8, name: 'Fortnite', image: '🏗️', categories: ['V-Bucks', 'Аккаунты', 'Скины', 'Battle Pass'] },
+    { id: 9, name: 'Minecraft', image: '⛏️', categories: ['Аккаунты', 'Сервера', 'Приватка', 'Модерка'] },
+    { id: 10, name: 'GTA V', image: '🚗', categories: ['Деньги', 'Аккаунты', 'Прокачка', 'Unlock All'] },
+    { id: 11, name: 'Apex Legends', image: '🎲', categories: ['Монеты', 'Аккаунты', 'Скины', 'Буст'] },
+    { id: 12, name: 'League of Legends', image: '🏆', regions: ['EUW', 'EUNE', 'RU'], categories: ['RP', 'Аккаунты', 'Буст', 'Скины'] },
+    { id: 13, name: 'Albion Online', image: '🗡️', categories: ['Серебро', 'Золото', 'Аккаунты'] },
+    { id: 14, name: 'Brawl Stars', image: '🥊', categories: ['Гемы', 'Аккаунты', 'Буст'] },
+    { id: 15, name: 'Call of Duty', image: '🎖️', categories: ['CP Points', 'Аккаунты', 'Буст'] },
+    { id: 16, name: 'Escape from Tarkov', image: '🔫', categories: ['Рубли', 'Предметы', 'Буст'] },
   ];
 
-  const activeDeals: Deal[] = [
-    { id: 1, title: 'Аккаунт WoW', amount: 8000, status: 'pending', buyer: 'Вы', seller: 'EpicGamer' },
-    { id: 2, title: 'Ключ Elden Ring', amount: 2000, status: 'paid', buyer: 'NewPlayer', seller: 'Вы' },
+  const offers: Offer[] = [
+    { id: 1, game: 'Counter-Strike 2', category: 'Скины', seller: 'ProTrader', description: 'AK-47 | Redline (Field-Tested)', price: 850, rating: 5.0, reviews: 1240, online: true },
+    { id: 2, game: 'Dota 2', category: 'Буст MMR', seller: 'MMRBoost', description: '+1000 MMR за 3-5 дней', price: 2500, rating: 4.9, reviews: 856, online: true },
+    { id: 3, game: 'World of Warcraft', category: 'Золото', seller: 'GoldKing', description: '100k золота WoW EU', price: 3200, rating: 4.8, reviews: 2103, online: false },
+    { id: 4, game: 'Roblox', category: 'Robux', seller: 'RobuxShop', description: '10,000 Robux мгновенно', price: 1200, rating: 4.9, reviews: 3421, online: true },
+    { id: 5, game: 'Valorant', category: 'Буст ранга', seller: 'ValoBoost', description: 'Буст от Iron до Diamond', price: 4500, rating: 5.0, reviews: 678, online: true },
+    { id: 6, game: 'Steam', category: 'Аккаунты', seller: 'SteamSeller', description: 'Аккаунт 250+ игр, Prime', price: 5500, rating: 4.7, reviews: 421, online: false },
   ];
 
-  const openDealDialog = (listing: Listing) => {
-    setSelectedListing(listing);
-    setShowDealDialog(true);
-  };
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const numbers = ['0', '2', '7', '8'];
 
-  const getStatusText = (status: string) => {
-    switch(status) {
-      case 'pending': return 'Ожидание оплаты';
-      case 'paid': return 'Оплачено, ждём подтверждения';
-      case 'completed': return 'Завершена';
-      default: return status;
-    }
+  const filteredGames = selectedLetter
+    ? games.filter(g => g.name.toUpperCase().startsWith(selectedLetter))
+    : games;
+
+  const openOfferDialog = (offer: Offer) => {
+    setSelectedOffer(offer);
+    setShowOfferDialog(true);
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border sticky top-0 bg-background/95 backdrop-blur z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <header className="border-b border-border bg-card sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between py-3">
             <div className="flex items-center gap-8">
-              <h1 className="text-2xl font-bold text-primary">GameTrade</h1>
-              <nav className="hidden md:flex gap-6">
-                <Button variant="ghost" onClick={() => setActiveTab('home')} className={activeTab === 'home' ? 'text-primary' : ''}>
-                  <Icon name="Home" size={18} className="mr-2" />
-                  Главная
-                </Button>
-                <Button variant="ghost" onClick={() => setActiveTab('catalog')} className={activeTab === 'catalog' ? 'text-primary' : ''}>
-                  <Icon name="Grid3x3" size={18} className="mr-2" />
-                  Каталог
-                </Button>
-                <Button variant="ghost" onClick={() => setActiveTab('deals')} className={activeTab === 'deals' ? 'text-primary' : ''}>
-                  <Icon name="ShoppingBag" size={18} className="mr-2" />
-                  Мои сделки
-                </Button>
-              </nav>
+              <h1 className="text-2xl font-bold text-primary">FunPay</h1>
+              <div className="hidden lg:flex items-center gap-4 relative flex-1 max-w-md">
+                <Input
+                  placeholder="Поиск по играм..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pr-10"
+                />
+                <Icon name="Search" size={18} className="absolute right-3 text-muted-foreground pointer-events-none" />
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <Button onClick={() => setShowAddListingDialog(true)} className="bg-accent hover:bg-accent/90">
-                <Icon name="Plus" size={18} className="mr-2" />
-                Разместить
+            <nav className="flex items-center gap-4">
+              <Button variant="ghost" size="sm">
+                <Icon name="HelpCircle" size={18} className="mr-2" />
+                Поддержка
               </Button>
-              <Button variant="ghost" onClick={() => setActiveTab('profile')}>
-                <Avatar className="w-8 h-8">
-                  <AvatarFallback>ПК</AvatarFallback>
-                </Avatar>
+              <Button variant="ghost" size="sm">
+                <Icon name="Globe" size={18} className="mr-2" />
+                RU
               </Button>
-            </div>
+              <Button size="sm" variant="outline">Войти</Button>
+              <Button size="sm" className="bg-primary hover:bg-primary/90">Регистрация</Button>
+            </nav>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {activeTab === 'home' && (
-          <div className="space-y-8 animate-fade-in">
-            <section className="bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl p-8 md:p-12">
-              <h2 className="text-4xl font-bold mb-4">Безопасная торговля игровыми товарами</h2>
-              <p className="text-lg text-muted-foreground mb-6">Покупайте и продавайте аккаунты, ключи и предметы с гарантией</p>
-              <div className="flex flex-wrap gap-4">
-                <Button size="lg" className="bg-secondary hover:bg-secondary/90" onClick={() => setActiveTab('catalog')}>
-                  <Icon name="Search" size={20} className="mr-2" />
-                  Найти товар
-                </Button>
-                <Button size="lg" variant="outline" onClick={() => setShowAddListingDialog(true)}>
-                  <Icon name="Plus" size={20} className="mr-2" />
-                  Разместить объявление
-                </Button>
+        <div className="space-y-8 animate-fade-in">
+          <section className="bg-gradient-to-br from-primary/20 via-secondary/10 to-accent/10 rounded-2xl p-8 relative overflow-hidden">
+            <div className="relative z-10">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="text-6xl">🎮</div>
+                <div>
+                  <h2 className="text-4xl font-bold mb-2">Маркетплейс игровых ценностей</h2>
+                  <p className="text-lg text-muted-foreground">753+ игр • Безопасные сделки • Гарантия возврата</p>
+                </div>
               </div>
-            </section>
+              <div className="flex items-center gap-6 mt-6">
+                <div className="flex items-center gap-2">
+                  <Icon name="Users" size={20} className="text-primary" />
+                  <span className="text-sm">Активных продавцов: 15,234</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Icon name="ShoppingBag" size={20} className="text-secondary" />
+                  <span className="text-sm">Сделок сегодня: 8,421</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Icon name="Star" size={20} className="text-yellow-500" />
+                  <span className="text-sm">11,704 отзывов</span>
+                </div>
+              </div>
+            </div>
+          </section>
 
-            <section>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold">Популярные предложения</h3>
-                <Button variant="ghost" onClick={() => setActiveTab('catalog')}>
-                  Смотреть всё <Icon name="ChevronRight" size={18} className="ml-2" />
+          <section>
+            <div className="flex flex-wrap items-center gap-2 mb-6 pb-4 border-b border-border">
+              <Button
+                variant={selectedLetter === null ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setSelectedLetter(null)}
+              >
+                Все
+              </Button>
+              {alphabet.map(letter => (
+                <Button
+                  key={letter}
+                  variant={selectedLetter === letter ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setSelectedLetter(letter)}
+                  className="w-9 h-9 p-0"
+                >
+                  {letter}
                 </Button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {listings.slice(0, 6).map(listing => (
-                  <Card key={listing.id} className="hover-scale cursor-pointer group" onClick={() => openDealDialog(listing)}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="text-4xl mb-2">{listing.image}</div>
-                        <Badge variant="secondary">{listing.category}</Badge>
-                      </div>
-                      <CardTitle className="group-hover:text-primary transition-colors">{listing.title}</CardTitle>
-                      <CardDescription>{listing.game}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-2xl font-bold text-primary">{listing.price} ₽</div>
-                          <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                            <Icon name="User" size={14} />
-                            {listing.seller}
-                            <Icon name="Star" size={14} className="ml-2 text-yellow-500" />
-                            {listing.rating}
-                          </div>
-                        </div>
-                        <Button size="sm" className="bg-secondary hover:bg-secondary/90">
-                          Купить
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </section>
-
-            <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <Icon name="Shield" size={32} className="text-primary mb-2" />
-                  <CardTitle>Гарантия безопасности</CardTitle>
-                  <CardDescription>Администрация выступает гарантом каждой сделки</CardDescription>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <Icon name="Zap" size={32} className="text-secondary mb-2" />
-                  <CardTitle>Быстрые сделки</CardTitle>
-                  <CardDescription>Моментальная передача товаров после оплаты</CardDescription>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <Icon name="Users" size={32} className="text-accent mb-2" />
-                  <CardTitle>Проверенные продавцы</CardTitle>
-                  <CardDescription>Система рейтингов и отзывов от покупателей</CardDescription>
-                </CardHeader>
-              </Card>
-            </section>
-          </div>
-        )}
-
-        {activeTab === 'catalog' && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="flex flex-col md:flex-row gap-4">
-              <Input placeholder="Поиск по названию..." className="md:flex-1" />
-              <Select>
-                <SelectTrigger className="md:w-48">
-                  <SelectValue placeholder="Категория" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Все категории</SelectItem>
-                  <SelectItem value="accounts">Аккаунты</SelectItem>
-                  <SelectItem value="items">Предметы</SelectItem>
-                  <SelectItem value="keys">Ключи</SelectItem>
-                  <SelectItem value="services">Услуги</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select>
-                <SelectTrigger className="md:w-48">
-                  <SelectValue placeholder="Игра" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Все игры</SelectItem>
-                  <SelectItem value="cs2">CS2</SelectItem>
-                  <SelectItem value="dota2">Dota 2</SelectItem>
-                  <SelectItem value="steam">Steam</SelectItem>
-                  <SelectItem value="valorant">Valorant</SelectItem>
-                </SelectContent>
-              </Select>
+              ))}
+              {numbers.map(num => (
+                <Button
+                  key={num}
+                  variant={selectedLetter === num ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setSelectedLetter(num)}
+                  className="w-9 h-9 p-0"
+                >
+                  {num}
+                </Button>
+              ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {listings.map(listing => (
-                <Card key={listing.id} className="hover-scale cursor-pointer group" onClick={() => openDealDialog(listing)}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="text-4xl mb-2">{listing.image}</div>
-                      <Badge variant="secondary">{listing.category}</Badge>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {filteredGames.map(game => (
+                <Card key={game.id} className="hover-scale cursor-pointer group">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="text-3xl">{game.image}</div>
+                      <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{game.name}</h3>
                     </div>
-                    <CardTitle className="group-hover:text-primary transition-colors">{listing.title}</CardTitle>
-                    <CardDescription>{listing.game}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
+                    
+                    {game.regions && (
+                      <div className="flex gap-2 mb-3">
+                        {game.regions.map(region => (
+                          <Badge key={region} variant="outline" className="text-xs">
+                            {region}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-2">
+                      {game.categories.map((category, idx) => (
+                        <Button
+                          key={idx}
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs hover:text-primary"
+                        >
+                          {category}
+                        </Button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold">Популярные предложения</h3>
+              <Button variant="ghost">
+                Смотреть всё <Icon name="ChevronRight" size={18} className="ml-2" />
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {offers.map(offer => (
+                <Card key={offer.id} className="hover-scale cursor-pointer group" onClick={() => openOfferDialog(offer)}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="secondary" className="text-xs">{offer.category}</Badge>
+                          <span className="text-sm text-muted-foreground">{offer.game}</span>
+                        </div>
+                        <h4 className="font-semibold mb-2 group-hover:text-primary transition-colors">{offer.description}</h4>
+                      </div>
+                      {offer.online && (
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      )}
+                    </div>
+
+                    <Separator className="my-3" />
+
                     <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-2xl font-bold text-primary">{listing.price} ₽</div>
-                        <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                          <Icon name="User" size={14} />
-                          {listing.seller}
-                          <Icon name="Star" size={14} className="ml-2 text-yellow-500" />
-                          {listing.rating}
+                      <div className="flex items-center gap-2">
+                        <Icon name="User" size={16} className="text-muted-foreground" />
+                        <span className="text-sm font-medium">{offer.seller}</span>
+                        <div className="flex items-center gap-1 ml-2">
+                          <Icon name="Star" size={14} className="text-yellow-500" />
+                          <span className="text-sm">{offer.rating}</span>
+                          <span className="text-xs text-muted-foreground">({offer.reviews})</span>
                         </div>
                       </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="text-2xl font-bold text-primary">{offer.price} ₽</div>
                       <Button size="sm" className="bg-secondary hover:bg-secondary/90">
                         Купить
                       </Button>
@@ -246,167 +253,69 @@ export default function Index() {
                 </Card>
               ))}
             </div>
-          </div>
-        )}
+          </section>
 
-        {activeTab === 'deals' && (
-          <div className="space-y-6 animate-fade-in">
-            <h2 className="text-3xl font-bold">Мои активные сделки</h2>
-            <div className="grid gap-4">
-              {activeDeals.map(deal => (
-                <Card key={deal.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle>{deal.title}</CardTitle>
-                        <CardDescription className="flex items-center gap-2 mt-2">
-                          <Icon name="User" size={16} />
-                          Покупатель: {deal.buyer} • Продавец: {deal.seller}
-                        </CardDescription>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-primary">{deal.amount} ₽</div>
-                        <Badge variant={deal.status === 'completed' ? 'default' : 'secondary'} className="mt-2">
-                          {getStatusText(deal.status)}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex gap-3">
-                      {deal.status === 'pending' && (
-                        <Button className="bg-secondary hover:bg-secondary/90">
-                          <Icon name="CreditCard" size={18} className="mr-2" />
-                          Оплатить
-                        </Button>
-                      )}
-                      {deal.status === 'paid' && (
-                        <Button variant="outline">
-                          <Icon name="MessageCircle" size={18} className="mr-2" />
-                          Чат со {deal.buyer === 'Вы' ? 'продавцом' : 'покупателем'}
-                        </Button>
-                      )}
-                      <Button variant="outline">
-                        <Icon name="FileText" size={18} className="mr-2" />
-                        Детали сделки
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'profile' && (
-          <div className="space-y-6 animate-fade-in">
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
             <Card>
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <Avatar className="w-20 h-20">
-                    <AvatarFallback className="text-2xl">ПК</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-2xl">Личный кабинет</CardTitle>
-                    <CardDescription>Управление аккаунтом и балансом</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card className="bg-primary/10">
-                    <CardHeader>
-                      <CardDescription>Баланс</CardDescription>
-                      <CardTitle className="text-3xl text-primary">{balance.toLocaleString()} ₽</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Button className="w-full bg-secondary hover:bg-secondary/90">
-                        <Icon name="Plus" size={18} className="mr-2" />
-                        Пополнить
-                      </Button>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader>
-                      <CardDescription>Завершённых сделок</CardDescription>
-                      <CardTitle className="text-3xl">127</CardTitle>
-                    </CardHeader>
-                  </Card>
-                  <Card>
-                    <CardHeader>
-                      <CardDescription>Рейтинг продавца</CardDescription>
-                      <CardTitle className="text-3xl flex items-center gap-2">
-                        4.8 <Icon name="Star" size={24} className="text-yellow-500" />
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="text-xl font-bold mb-4">Настройки</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Имя пользователя</Label>
-                      <Input value="GameMaster2024" className="mt-2" />
-                    </div>
-                    <div>
-                      <Label>Email</Label>
-                      <Input value="gamer@example.com" type="email" className="mt-2" />
-                    </div>
-                    <Button>Сохранить изменения</Button>
-                  </div>
-                </div>
+              <CardContent className="p-6 text-center">
+                <Icon name="Shield" size={48} className="text-primary mx-auto mb-4" />
+                <h4 className="font-bold text-lg mb-2">Гарантия безопасности</h4>
+                <p className="text-sm text-muted-foreground">Администрация выступает гарантом каждой сделки</p>
               </CardContent>
             </Card>
-
             <Card>
-              <CardHeader>
-                <CardTitle>Помощь и поддержка</CardTitle>
-                <CardDescription>Есть вопросы? Мы готовы помочь!</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button variant="outline" className="w-full justify-start">
-                  <Icon name="MessageCircle" size={18} className="mr-2" />
-                  Чат с поддержкой
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Icon name="HelpCircle" size={18} className="mr-2" />
-                  База знаний
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Icon name="Shield" size={18} className="mr-2" />
-                  Правила безопасности
-                </Button>
+              <CardContent className="p-6 text-center">
+                <Icon name="Zap" size={48} className="text-secondary mx-auto mb-4" />
+                <h4 className="font-bold text-lg mb-2">Моментальная доставка</h4>
+                <p className="text-sm text-muted-foreground">Получите товар сразу после оплаты</p>
               </CardContent>
             </Card>
-          </div>
-        )}
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Icon name="Users" size={48} className="text-accent mx-auto mb-4" />
+                <h4 className="font-bold text-lg mb-2">Проверенные продавцы</h4>
+                <p className="text-sm text-muted-foreground">Система рейтингов и отзывов покупателей</p>
+              </CardContent>
+            </Card>
+          </section>
+        </div>
       </main>
 
-      <Dialog open={showDealDialog} onOpenChange={setShowDealDialog}>
+      <Dialog open={showOfferDialog} onOpenChange={setShowOfferDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl">Окно сделки</DialogTitle>
-            <DialogDescription>Безопасная покупка с гарантией администрации</DialogDescription>
+            <DialogDescription>Безопасная покупка с гарантией платформы</DialogDescription>
           </DialogHeader>
-          {selectedListing && (
+          {selectedOffer && (
             <div className="space-y-6">
-              <div className="flex gap-4">
-                <div className="text-6xl">{selectedListing.image}</div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-2">{selectedListing.title}</h3>
-                  <div className="flex items-center gap-2 text-muted-foreground mb-3">
-                    <Badge variant="secondary">{selectedListing.category}</Badge>
-                    <span>•</span>
-                    <span>{selectedListing.game}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Icon name="User" size={16} />
-                    <span className="font-medium">{selectedListing.seller}</span>
-                    <Icon name="Star" size={16} className="ml-2 text-yellow-500" />
-                    <span>{selectedListing.rating}</span>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="secondary">{selectedOffer.category}</Badge>
+                  <span className="text-muted-foreground">{selectedOffer.game}</span>
+                </div>
+                <h3 className="text-xl font-bold mb-4">{selectedOffer.description}</h3>
+
+                <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
+                  <Icon name="User" size={32} className="text-muted-foreground" />
+                  <div className="flex-1">
+                    <div className="font-medium">{selectedOffer.seller}</div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="flex items-center gap-1">
+                        <Icon name="Star" size={14} className="text-yellow-500" />
+                        <span>{selectedOffer.rating}</span>
+                      </div>
+                      <span className="text-muted-foreground">• {selectedOffer.reviews} отзывов</span>
+                      {selectedOffer.online && (
+                        <>
+                          <span className="text-muted-foreground">•</span>
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                            <span className="text-green-500">Онлайн</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -416,16 +325,16 @@ export default function Index() {
               <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                 <div className="flex justify-between text-lg">
                   <span>Цена товара:</span>
-                  <span className="font-bold">{selectedListing.price} ₽</span>
+                  <span className="font-bold">{selectedOffer.price} ₽</span>
                 </div>
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Комиссия платформы (5%):</span>
-                  <span>{(selectedListing.price * 0.05).toFixed(0)} ₽</span>
+                  <span>{(selectedOffer.price * 0.05).toFixed(0)} ₽</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-xl font-bold text-primary">
                   <span>Итого к оплате:</span>
-                  <span>{(selectedListing.price * 1.05).toFixed(0)} ₽</span>
+                  <span>{(selectedOffer.price * 1.05).toFixed(0)} ₽</span>
                 </div>
               </div>
 
@@ -436,7 +345,7 @@ export default function Index() {
                     <div className="font-semibold mb-1">Гарантия безопасности</div>
                     <div className="text-muted-foreground">
                       Средства зачисляются продавцу только после подтверждения получения товара. 
-                      Администрация выступает гарантом сделки.
+                      Платформа выступает гарантом сделки.
                     </div>
                   </div>
                 </div>
@@ -445,82 +354,14 @@ export default function Index() {
               <div className="flex gap-3">
                 <Button className="flex-1 bg-secondary hover:bg-secondary/90 text-lg py-6">
                   <Icon name="CreditCard" size={20} className="mr-2" />
-                  Оплатить {(selectedListing.price * 1.05).toFixed(0)} ₽
+                  Оплатить {(selectedOffer.price * 1.05).toFixed(0)} ₽
                 </Button>
-                <Button variant="outline" onClick={() => setShowDealDialog(false)}>
+                <Button variant="outline" onClick={() => setShowOfferDialog(false)}>
                   Отмена
                 </Button>
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showAddListingDialog} onOpenChange={setShowAddListingDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Разместить объявление</DialogTitle>
-            <DialogDescription>Заполните информацию о товаре для продажи</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Название товара</Label>
-              <Input placeholder="Например: Аккаунт Steam с GTA V" className="mt-2" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Категория</Label>
-                <Select>
-                  <SelectTrigger className="mt-2">
-                    <SelectValue placeholder="Выберите категорию" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="accounts">Аккаунты</SelectItem>
-                    <SelectItem value="items">Предметы</SelectItem>
-                    <SelectItem value="keys">Ключи</SelectItem>
-                    <SelectItem value="services">Услуги</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Игра</Label>
-                <Select>
-                  <SelectTrigger className="mt-2">
-                    <SelectValue placeholder="Выберите игру" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="steam">Steam</SelectItem>
-                    <SelectItem value="cs2">CS2</SelectItem>
-                    <SelectItem value="dota2">Dota 2</SelectItem>
-                    <SelectItem value="valorant">Valorant</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div>
-              <Label>Описание</Label>
-              <Textarea placeholder="Подробно опишите товар..." className="mt-2 min-h-32" />
-            </div>
-            <div>
-              <Label>Цена (₽)</Label>
-              <Input type="number" placeholder="5000" className="mt-2" />
-            </div>
-            <div className="bg-muted/50 rounded-lg p-4 text-sm">
-              <div className="font-semibold mb-2">Комиссия платформы</div>
-              <div className="text-muted-foreground">
-                При продаже товара платформа удерживает комиссию 5% от суммы сделки за гарантию безопасности.
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <Button className="flex-1 bg-accent hover:bg-accent/90">
-                <Icon name="Plus" size={18} className="mr-2" />
-                Опубликовать объявление
-              </Button>
-              <Button variant="outline" onClick={() => setShowAddListingDialog(false)}>
-                Отмена
-              </Button>
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
     </div>
